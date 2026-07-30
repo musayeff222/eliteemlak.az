@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giriş — ELITE-EMLAK.AZ Admin</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <div class="admin-login" id="loginView">
+    <div class="admin-login__card">
+      <div class="admin-login__logo">ELITE-EMLAK.AZ</div>
+      <h1 class="admin-login__title">ELITE-EMLAK.AZ Admin</h1>
+      <p class="admin-login__subtitle">Yalnız Elite Emlak idarəçiləri üçün</p>
+      <form id="loginForm" class="admin-login__form">
+        <label class="admin-field">
+          <span>İstifadəçi adı</span>
+          <input type="text" id="loginUser" autocomplete="username" required placeholder="admin">
+        </label>
+        <label class="admin-field">
+          <span>Şifrə</span>
+          <input type="password" id="loginPass" autocomplete="current-password" required placeholder="••••••••">
+        </label>
+        <p class="admin-login__error" id="loginError" hidden>Yanlış istifadəçi adı və ya şifrə</p>
+        <button type="submit" class="admin-btn admin-btn--primary admin-btn--full">Daxil ol</button>
+      </form>
+      <a href="/" class="admin-login__back">← Sayta qayıt</a>
+    </div>
+  </div>
+
+  <script src="/js/store.js"></script>
+  <script src="/js/admin-login.js"></script>
+</body>
+</html>

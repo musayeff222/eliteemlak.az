@@ -1,0 +1,9 @@
+{
+  "name": "elite-emlak",
+  "version": "1.0.0",
+  "description": "ELITE-EMLAK.AZ daşınmaz əmlak platforması",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}
