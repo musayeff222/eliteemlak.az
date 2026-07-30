@@ -3,7 +3,15 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.resolve(__dirname);
-const port = Number(process.env.PORT) || 8080;
+
+// Hosting platforms (cPanel, Render, Railway, Heroku) inject PORT
+function resolvePort() {
+  const raw = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || "8080";
+  const parsed = parseInt(String(raw).trim(), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 8080;
+}
+
+const port = resolvePort();
 const host = process.env.HOST || "0.0.0.0";
 
 const types = {
@@ -50,9 +58,10 @@ function resolveUrl(urlPath) {
   let pathname = decodeURIComponent((urlPath || "/").split("?")[0]);
   if (!pathname.startsWith("/")) pathname = `/${pathname}`;
 
-  const normalized = pathname.length > 1 && pathname.endsWith("/")
-    ? pathname.slice(0, -1)
-    : pathname;
+  const normalized =
+    pathname.length > 1 && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
 
   if (routes[normalized]) return routes[normalized];
 
@@ -71,6 +80,12 @@ function resolveUrl(urlPath) {
 
 const server = http.createServer((req, res) => {
   try {
+    // Health / readiness for hosting panels
+    if (req.url === "/health" || req.url === "/healthz") {
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify({ ok: true, service: "elite-emlak" }));
+    }
+
     const mapped = resolveUrl(req.url || "/");
     const filePath = safeJoin(root, mapped);
 
@@ -96,11 +111,42 @@ const server = http.createServer((req, res) => {
       res.end(data);
     });
   } catch (error) {
+    console.error("Request error:", error && error.message);
     res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("Server error");
   }
 });
 
+server.on("error", (err) => {
+  console.error("Server error:", err.message);
+  if (err.code === "EADDRINUSE") {
+    console.error(`Port ${port} is already in use. Set a free PORT in hosting settings.`);
+  }
+  // Do not leave a zombie restart storm without a clear exit
+  process.exit(1);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("uncaughtException:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("unhandledRejection:", err);
+});
+
+// Keep process alive on SIGTERM (graceful stop for hosting)
+process.on("SIGTERM", () => {
+  server.close(() => process.exit(0));
+});
+
 server.listen(port, host, () => {
-  console.log(`ELITE-EMLAK.AZ listening on http://${host}:${port}`);
+  console.log(
+    JSON.stringify({
+      message: "ELITE-EMLAK.AZ started",
+      host,
+      port,
+      envPort: process.env.PORT || null,
+      pid: process.pid,
+    })
+  );
 });
