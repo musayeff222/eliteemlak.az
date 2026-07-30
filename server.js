@@ -2,59 +2,105 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const root = __dirname;
-const port = 8080;
+const root = path.resolve(__dirname);
+const port = Number(process.env.PORT) || 8080;
+const host = process.env.HOST || "0.0.0.0";
+
 const types = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".map": "application/json",
 };
 
 const routes = {
+  "/": "/index.html",
   "/admin-login": "/admin-login/index.html",
   "/admin": "/admin/index.html",
+  "/elan": "/elan.html",
 };
 
-function resolvePath(urlPath) {
-  if (urlPath === "/") return "/index.html";
+function safeJoin(base, requestPath) {
+  const cleaned = String(requestPath || "")
+    .replace(/^\/+/, "")
+    .replace(/\\/g, "/")
+    .split("/")
+    .filter((part) => part && part !== "." && part !== "..")
+    .join(path.sep);
 
-  const normalized = urlPath.endsWith("/") ? urlPath.slice(0, -1) : urlPath;
+  const resolved = path.resolve(base, cleaned);
+  const relative = path.relative(base, resolved);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    return null;
+  }
+  return resolved;
+}
+
+function resolveUrl(urlPath) {
+  let pathname = decodeURIComponent((urlPath || "/").split("?")[0]);
+  if (!pathname.startsWith("/")) pathname = `/${pathname}`;
+
+  const normalized = pathname.length > 1 && pathname.endsWith("/")
+    ? pathname.slice(0, -1)
+    : pathname;
+
   if (routes[normalized]) return routes[normalized];
 
   if (!path.extname(normalized)) {
     const asIndex = `${normalized}/index.html`;
-    if (fs.existsSync(path.join(root, asIndex))) return asIndex;
+    const indexPath = safeJoin(root, asIndex);
+    if (indexPath && fs.existsSync(indexPath)) return asIndex;
+
+    const asHtml = `${normalized}.html`;
+    const htmlPath = safeJoin(root, asHtml);
+    if (htmlPath && fs.existsSync(htmlPath)) return asHtml;
   }
 
   return normalized;
 }
 
-http
-  .createServer((req, res) => {
-    let urlPath = decodeURIComponent(req.url.split("?")[0]);
-    urlPath = resolvePath(urlPath);
-    const filePath = path.normalize(path.join(root, urlPath));
+const server = http.createServer((req, res) => {
+  try {
+    const mapped = resolveUrl(req.url || "/");
+    const filePath = safeJoin(root, mapped);
 
-    if (!filePath.startsWith(root)) {
-      res.writeHead(403);
+    if (!filePath) {
+      res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });
       return res.end("Forbidden");
     }
 
     fs.readFile(filePath, (err, data) => {
       if (err) {
-        res.writeHead(404);
-        return res.end("Not found");
+        res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(
+          "<!DOCTYPE html><html><body style='font-family:sans-serif;padding:40px'>" +
+            "<h1>404</h1><p>Səhifə tapılmadı.</p><a href='/'>Ana səhifə</a></body></html>"
+        );
       }
-      res.writeHead(200, { "Content-Type": types[path.extname(filePath)] || "text/plain" });
+
+      const ext = path.extname(filePath).toLowerCase();
+      res.writeHead(200, {
+        "Content-Type": types[ext] || "application/octet-stream",
+        "Cache-Control": ext === ".html" ? "no-cache" : "public, max-age=3600",
+      });
       res.end(data);
     });
-  })
-  .listen(port, () => {
-    console.log(`ELITE-EMLAK.AZ: http://localhost:${port}`);
-    console.log(`Admin login: http://localhost:${port}/admin-login`);
-  });
+  } catch (error) {
+    res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("Server error");
+  }
+});
+
+server.listen(port, host, () => {
+  console.log(`ELITE-EMLAK.AZ listening on http://${host}:${port}`);
+});

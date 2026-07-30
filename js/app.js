@@ -41,7 +41,7 @@
       : "";
 
     return `
-      <a href="elan.html?id=${listing.id}" class="card card--${variant}" data-id="${listing.id}">
+      <a href="/elan.html?id=${listing.id}" class="card card--${variant}" data-id="${listing.id}">
         <div class="card__image-wrap">
           <img src="${listing.image}" alt="" class="card__image" loading="lazy">
           ${typeBadge}

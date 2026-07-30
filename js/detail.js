@@ -6,13 +6,13 @@
   const bookmarkBtn = document.querySelector(".detail-bookmark");
 
   if (!id) {
-    main.innerHTML = '<p class="detail-loading">Obyekt tapılmadı. <a href="index.html">Ana səhifəyə qayıt</a></p>';
+    main.innerHTML = '<p class="detail-loading">Obyekt tapılmadı. <a href="/">Ana səhifəyə qayıt</a></p>';
     return;
   }
 
   const listing = getPublicListingById(id);
   if (!listing) {
-    main.innerHTML = '<p class="detail-loading">Obyekt tapılmadı. <a href="index.html">Ana səhifəyə qayıt</a></p>';
+    main.innerHTML = '<p class="detail-loading">Obyekt tapılmadı. <a href="/">Ana səhifəyə qayıt</a></p>';
     return;
   }
 
