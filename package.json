@@ -1,0 +1,20 @@
+{
+  "name": "elite-emlak",
+  "version": "1.1.0",
+  "description": "ELITE-EMLAK.AZ — Express + MySQL backend",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.23.2"
+  }
+}

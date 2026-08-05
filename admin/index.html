@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — ELITE-EMLAK.AZ</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <div class="admin-panel" id="panelView">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar__logo">ELITE-EMLAK.AZ <span>Admin</span></div>
+      <nav class="admin-nav">
+        <button class="admin-nav__item admin-nav__item--active" data-view="dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="admin-nav__item" data-view="listings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span>Obyektlər</span>
+        </button>
+        <button class="admin-nav__item" data-view="complexes">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="1"/></svg>
+          <span>Komplekslər</span>
+        </button>
+        <button class="admin-nav__item" data-view="settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
+          <span>Tənzimləmələr</span>
+        </button>
+      </nav>
+      <div class="admin-sidebar__footer">
+        <a href="/" class="admin-sidebar__link" target="_blank">Sayta bax</a>
+        <button class="admin-sidebar__logout" id="logoutBtn">Çıxış</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <h2 class="admin-header__title" id="pageTitle">Dashboard</h2>
+        <div class="admin-header__user">Elite Emlak Admin</div>
+      </header>
+
+      <section class="admin-view" id="view-dashboard">
+        <div class="admin-info-banner">
+          Obyektlər müştəridən qəbul edilir, burada redaktə olunur və yalnız <strong>Dərc et</strong> düyməsi ilə saytda paylaşılır.
+        </div>
+        <div class="admin-stats">
+          <div class="admin-stat admin-stat--green">
+            <span class="admin-stat__value" id="statPublished">0</span>
+            <span class="admin-stat__label">Saytda (dərc)</span>
+          </div>
+          <div class="admin-stat">
+            <span class="admin-stat__value" id="statDraft">0</span>
+            <span class="admin-stat__label">Qaralama</span>
+          </div>
+          <div class="admin-stat admin-stat--blue">
+            <span class="admin-stat__value" id="statRent">0</span>
+            <span class="admin-stat__label">Kirayə</span>
+          </div>
+          <div class="admin-stat admin-stat--gold">
+            <span class="admin-stat__value" id="statSale">0</span>
+            <span class="admin-stat__label">Satış</span>
+          </div>
+        </div>
+        <div class="admin-card">
+          <h3>Son obyektlər</h3>
+          <div class="admin-table-wrap">
+            <table class="admin-table" id="recentTable">
+              <thead>
+                <tr><th>ID</th><th>Qiymət</th><th>Yer</th><th>Status</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-view" id="view-listings" hidden>
+        <div class="admin-toolbar">
+          <input type="search" class="admin-search" id="listingSearch" placeholder="Obyekt axtar...">
+          <select class="admin-select" id="listingFilter">
+            <option value="all">Hamısı</option>
+            <option value="draft">Qaralama</option>
+            <option value="published">Dərc edilmiş</option>
+            <option value="sale">Satış</option>
+            <option value="rent">Kirayə</option>
+            <option value="daily">Günlük</option>
+            <option value="premium">Premium</option>
+          </select>
+          <button class="admin-btn admin-btn--primary" id="addListingBtn">+ Yeni obyekt</button>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table admin-table--listings">
+            <thead>
+              <tr>
+                <th>Şəkil</th><th>ID</th><th>Qiymət</th><th>Yer</th><th>Növ</th><th>Status</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="listingsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-view" id="view-complexes" hidden>
+        <div class="admin-toolbar">
+          <button class="admin-btn admin-btn--primary" id="addComplexBtn">+ Yeni kompleks</button>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Şəkil</th><th>Ad</th><th>Qiymət</th><th>Yer</th><th>Təhvil</th><th></th></tr>
+            </thead>
+            <tbody id="complexesTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-view" id="view-settings" hidden>
+        <div class="admin-card">
+          <h3>İş axını</h3>
+          <ol class="admin-workflow">
+            <li>Müştəridən obyekt məlumatları (şəkil, qiymət, ünvan) alın</li>
+            <li>Admin paneldə <strong>+ Yeni obyekt</strong> ilə qaralama yaradın</li>
+            <li>Məlumatları redaktə edin</li>
+            <li><strong>Dərc et</strong> düyməsi ilə saytda paylaşın</li>
+          </ol>
+        </div>
+        <div class="admin-card admin-card--danger">
+          <h3>Data idarəetməsi</h3>
+          <p>Bütün dəyişiklikləri silib ilkin məlumatlara qayıdın.</p>
+          <button class="admin-btn admin-btn--danger" id="resetDataBtn">İlkin məlumatları bərpa et</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="admin-modal" id="modal" hidden>
+    <div class="admin-modal__overlay"></div>
+    <div class="admin-modal__content">
+      <div class="admin-modal__header">
+        <h3 id="modalTitle">Yeni obyekt</h3>
+        <button class="admin-modal__close" id="modalClose">&times;</button>
+      </div>
+      <form id="modalForm" class="admin-modal__body"></form>
+      <div class="admin-modal__footer">
+        <button type="button" class="admin-btn" id="modalCancel">Ləğv et</button>
+        <button type="submit" form="modalForm" class="admin-btn admin-btn--primary" id="modalSave">Yadda saxla</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/data.js"></script>
+  <script src="/js/store.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
