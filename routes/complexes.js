@@ -19,7 +19,7 @@ publicRouter.get("/", async (_req, res) => {
     res.json(rows.map(complexFromRow));
   } catch (err) {
     console.error("list complexes:", err);
-    res.status(500).json({ error: "Server xətası" });
+    res.status(500).json({ error: "Server xətası", detail: err.message });
   }
 });
 

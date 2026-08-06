@@ -1,13 +1,12 @@
 -- ============================================================
 -- ELITE-EMLAK.AZ — MySQL Database Schema
 -- Charset: utf8mb4 | Engine: InnoDB
+--
+-- Hostinger / phpMyAdmin:
+--   1) Əvvəl öz bazanızı seçin (məs: u884620139_elite_emlak)
+--   2) Bu faylı Import edin
+--   CREATE DATABASE / USE sətirləri lazım DEYİL — seçilmiş DB-də işləyir.
 -- ============================================================
-
-CREATE DATABASE IF NOT EXISTS `elite_emlak`
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE `elite_emlak`;
 
 -- ------------------------------------------------------------
 -- 1) admins — admin panel istifadəçiləri

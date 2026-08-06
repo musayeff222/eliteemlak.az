@@ -33,7 +33,7 @@ publicRouter.get("/", async (req, res) => {
     res.json(rows.map(listingFromRow));
   } catch (err) {
     console.error("list listings:", err);
-    res.status(500).json({ error: "Server xətası" });
+    res.status(500).json({ error: "Server xətası", detail: err.message });
   }
 });
 
@@ -46,7 +46,7 @@ publicRouter.get("/:id", async (req, res) => {
     res.json(listingFromRow(row));
   } catch (err) {
     console.error("get listing:", err);
-    res.status(500).json({ error: "Server xətası" });
+    res.status(500).json({ error: "Server xətası", detail: err.message });
   }
 });
 
