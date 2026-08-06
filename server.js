@@ -23,6 +23,7 @@ const envCount = loadEnv();
 
 const express = require("express");
 const { ping, getSafeDbInfo } = require("./lib/db");
+const { migrate } = require("./lib/migrate");
 const authRoutes = require("./routes/auth");
 const listings = require("./routes/listings");
 const complexes = require("./routes/complexes");
@@ -39,7 +40,16 @@ app.get("/api/health", async (_req, res) => {
   const dbInfo = getSafeDbInfo();
   try {
     const dbOk = await ping();
-    res.json({ ok: true, db: dbOk, envFromFile: envCount, ...dbInfo });
+    let tables = null;
+    try {
+      const rows = await require("./lib/db").query(
+        "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('listings','complexes','admins')"
+      );
+      tables = Number(rows[0].c);
+    } catch {
+      tables = null;
+    }
+    res.json({ ok: true, db: dbOk, tables, envFromFile: envCount, ...dbInfo });
   } catch (err) {
     res.status(503).json({
       ok: false,
@@ -64,6 +74,16 @@ app.get("/health", async (_req, res) => {
       envFromFile: envCount,
       ...dbInfo,
     });
+  }
+});
+
+app.post("/api/setup/migrate", async (_req, res) => {
+  try {
+    await migrate();
+    res.json({ ok: true, message: "Cədvəllər yaradıldı / seed olundu" });
+  } catch (err) {
+    console.error("migrate error:", err);
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
@@ -92,10 +112,21 @@ app.get(["/elan", "/elan.html"], (_req, res) => {
   res.sendFile(path.join(root, "elan.html"));
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  const info = getSafeDbInfo();
-  console.log(`Listening on ${PORT}`);
-  console.log(
-    `DB=${info.user}@${info.host}:${info.port}/${info.database} passwordSet=${info.passwordSet} envFromFile=${envCount}`
-  );
-});
+async function start() {
+  try {
+    await migrate();
+    console.log("DB migrate/seed OK");
+  } catch (err) {
+    console.error("DB migrate failed:", err.message);
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    const info = getSafeDbInfo();
+    console.log(`Listening on ${PORT}`);
+    console.log(
+      `DB=${info.user}@${info.host}:${info.port}/${info.database} passwordSet=${info.passwordSet} envFromFile=${envCount}`
+    );
+  });
+}
+
+start();
