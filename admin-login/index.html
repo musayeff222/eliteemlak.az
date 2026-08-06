@@ -2,24 +2,28 @@
 <html lang="az">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Giriş — ELITE-EMLAK.AZ Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
   <div class="admin-login" id="loginView">
     <div class="admin-login__card">
-      <div class="admin-login__logo">ELITE-EMLAK.AZ</div>
-      <h1 class="admin-login__title">ELITE-EMLAK.AZ Admin</h1>
-      <p class="admin-login__subtitle">Yalnız Elite Emlak idarəçiləri üçün</p>
+      <div class="admin-login__logo">ELITE-EMLAK</div>
+      <h1 class="admin-login__title">Admin giriş</h1>
+      <p class="admin-login__subtitle">Yalnız idarəçilər üçün</p>
       <form id="loginForm" class="admin-login__form">
         <label class="admin-field">
           <span>İstifadəçi adı</span>
-          <input type="text" id="loginUser" autocomplete="username" required placeholder="admin">
+          <input type="text" id="loginUser" autocomplete="username" required placeholder="admin" enterkeyhint="next">
         </label>
         <label class="admin-field">
           <span>Şifrə</span>
-          <input type="password" id="loginPass" autocomplete="current-password" required placeholder="••••••••">
+          <input type="password" id="loginPass" autocomplete="current-password" required placeholder="••••••••" enterkeyhint="go">
         </label>
         <p class="admin-login__error" id="loginError" hidden>Yanlış istifadəçi adı və ya şifrə</p>
         <button type="submit" class="admin-btn admin-btn--primary admin-btn--full">Daxil ol</button>

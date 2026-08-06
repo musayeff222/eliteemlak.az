@@ -8,20 +8,39 @@
   const modal = document.getElementById("modal");
   const modalForm = document.getElementById("modalForm");
   const modalTitle = document.getElementById("modalTitle");
+  const panel = document.getElementById("panelView");
+  const sidebar = document.getElementById("adminSidebar");
+  const backdrop = document.getElementById("drawerBackdrop");
 
   let currentModalType = null;
   let editingId = null;
   let storeCache = { listings: [], complexes: [] };
 
   const viewTitles = {
-    dashboard: "Dashboard",
+    dashboard: "İcmal",
     listings: "Obyektlər",
     complexes: "Komplekslər",
-    settings: "Tənzimləmələr",
+    settings: "Ayarlar",
   };
 
   const typeLabels = { sale: "Satış", rent: "Kirayə", daily: "Günlük" };
   const statusLabels = { published: "Dərc", draft: "Qaralama" };
+
+  function closeMenu() {
+    panel.classList.remove("admin-panel--menu-open");
+    backdrop.hidden = true;
+  }
+
+  function openMenu() {
+    panel.classList.add("admin-panel--menu-open");
+    backdrop.hidden = false;
+  }
+
+  document.getElementById("menuBtn")?.addEventListener("click", () => {
+    if (panel.classList.contains("admin-panel--menu-open")) closeMenu();
+    else openMenu();
+  });
+  backdrop?.addEventListener("click", closeMenu);
 
   async function refreshStore() {
     storeCache = await getStore();
@@ -41,30 +60,132 @@
     }
   }
 
-  document.getElementById("logoutBtn").addEventListener("click", () => {
+  function logout() {
     adminLogout();
     window.location.href = "/admin-login";
+  }
+
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("logoutBtnMobile")?.addEventListener("click", logout);
+
+  async function switchView(view) {
+    document.querySelectorAll(".admin-nav__item").forEach((b) => {
+      b.classList.toggle("admin-nav__item--active", b.dataset.view === view);
+    });
+    document.querySelectorAll(".admin-tabbar__item").forEach((b) => {
+      b.classList.toggle("admin-tabbar__item--active", b.dataset.view === view);
+    });
+    pageTitle.textContent = viewTitles[view] || view;
+    document.querySelectorAll(".admin-view").forEach((v) => (v.hidden = true));
+    document.getElementById(`view-${view}`).hidden = false;
+    closeMenu();
+
+    try {
+      await refreshStore();
+      if (view === "dashboard") renderDashboard();
+      if (view === "listings") renderListings();
+      if (view === "complexes") renderComplexes();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Yükləmə xətası");
+    }
+  }
+
+  document.querySelectorAll("[data-view]").forEach((btn) => {
+    btn.addEventListener("click", () => switchView(btn.dataset.view));
   });
 
-  document.querySelectorAll(".admin-nav__item").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      document.querySelectorAll(".admin-nav__item").forEach((b) => b.classList.remove("admin-nav__item--active"));
-      btn.classList.add("admin-nav__item--active");
-      const view = btn.dataset.view;
-      pageTitle.textContent = viewTitles[view];
-      document.querySelectorAll(".admin-view").forEach((v) => (v.hidden = true));
-      document.getElementById(`view-${view}`).hidden = false;
-      try {
-        await refreshStore();
-        if (view === "dashboard") renderDashboard();
-        if (view === "listings") renderListings();
-        if (view === "complexes") renderComplexes();
-      } catch (err) {
-        console.error(err);
-        alert(err.message || "Yükləmə xətası");
-      }
+  function bindItemActions(root) {
+    root.querySelectorAll("[data-edit-listing]").forEach((btn) => {
+      btn.addEventListener("click", () => openListingModal(Number(btn.dataset.editListing)));
     });
-  });
+    root.querySelectorAll("[data-publish-listing]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        try {
+          await toggleListingPublish(btn.dataset.publishListing);
+          await refreshStore();
+          renderListings();
+          renderDashboard();
+        } catch (err) {
+          alert(err.message || "Xəta");
+        }
+      });
+    });
+    root.querySelectorAll("[data-delete-listing]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Bu obyekti silmək istədiyinizə əminsiniz?")) return;
+        try {
+          await deleteListing(btn.dataset.deleteListing);
+          await refreshStore();
+          renderListings();
+          renderDashboard();
+        } catch (err) {
+          alert(err.message || "Xəta");
+        }
+      });
+    });
+    root.querySelectorAll("[data-edit-complex]").forEach((btn) => {
+      btn.addEventListener("click", () => openComplexModal(Number(btn.dataset.editComplex)));
+    });
+    root.querySelectorAll("[data-delete-complex]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Bu kompleksi silmək istədiyinizə əminsiniz?")) return;
+        try {
+          await deleteComplex(btn.dataset.deleteComplex);
+          await refreshStore();
+          renderComplexes();
+        } catch (err) {
+          alert(err.message || "Xəta");
+        }
+      });
+    });
+  }
+
+  function listingCard(l, { compact = false } = {}) {
+    const actions = compact
+      ? ""
+      : `<div class="admin-item__actions">
+          <button type="button" class="admin-action-btn admin-action-btn--publish" data-publish-listing="${l.id}">
+            ${l.status === "published" ? "Gizlət" : "Dərc et"}
+          </button>
+          <button type="button" class="admin-action-btn" data-edit-listing="${l.id}">Redaktə</button>
+          <button type="button" class="admin-action-btn admin-action-btn--danger" data-delete-listing="${l.id}">Sil</button>
+        </div>`;
+
+    return `
+      <article class="admin-item">
+        <img src="${l.image || ""}" alt="" class="admin-item__img" loading="lazy">
+        <div class="admin-item__body">
+          <div class="admin-item__top">
+            <div class="admin-item__price">${formatPrice(l.price)}</div>
+            <span class="admin-badge admin-badge--${l.status}">${statusLabels[l.status] || l.status}</span>
+          </div>
+          <p class="admin-item__meta">
+            <strong>${l.location}</strong>
+            · ${typeLabels[l.listingType] || "—"}
+            · #${l.id}
+          </p>
+          ${actions}
+        </div>
+      </article>`;
+  }
+
+  function complexCard(c) {
+    return `
+      <article class="admin-item">
+        <img src="${c.image || ""}" alt="" class="admin-item__img" loading="lazy">
+        <div class="admin-item__body">
+          <div class="admin-item__top">
+            <div class="admin-item__price">${c.name}</div>
+          </div>
+          <p class="admin-item__meta">${c.priceFrom} ₼-dən · ${c.location}<br>${c.deadline || ""}</p>
+          <div class="admin-item__actions">
+            <button type="button" class="admin-action-btn" data-edit-complex="${c.id}">Redaktə</button>
+            <button type="button" class="admin-action-btn admin-action-btn--danger" data-delete-complex="${c.id}">Sil</button>
+          </div>
+        </div>
+      </article>`;
+  }
 
   function renderDashboard() {
     const store = storeCache;
@@ -76,13 +197,12 @@
     document.getElementById("statRent").textContent = store.listings.filter((l) => l.listingType === "rent").length;
     document.getElementById("statSale").textContent = store.listings.filter((l) => l.listingType === "sale").length;
 
-    document.querySelector("#recentTable tbody").innerHTML = store.listings.slice(0, 8).map((l) => `
-      <tr>
-        <td>${l.id}</td>
-        <td>${formatPrice(l.price)}</td>
-        <td>${l.location}</td>
-        <td><span class="admin-badge admin-badge--${l.status}">${statusLabels[l.status] || l.status}</span></td>
-      </tr>`).join("");
+    const recent = document.getElementById("recentList");
+    const items = store.listings.slice(0, 8);
+    recent.innerHTML = items.length
+      ? items.map((l) => listingCard(l, { compact: true })).join("")
+      : '<p class="admin-empty">Hələ obyekt yoxdur</p>';
+    bindItemActions(recent);
   }
 
   function getFilteredListings() {
@@ -107,89 +227,20 @@
   }
 
   function renderListings() {
-    const tbody = document.getElementById("listingsTableBody");
-    tbody.innerHTML = getFilteredListings().map((l) => `
-      <tr>
-        <td><img src="${l.image}" alt="" class="admin-table__img"></td>
-        <td>${l.id}</td>
-        <td><strong>${formatPrice(l.price)}</strong></td>
-        <td>${l.location}</td>
-        <td>${typeLabels[l.listingType] || "—"}</td>
-        <td><span class="admin-badge admin-badge--${l.status}">${statusLabels[l.status] || l.status}</span></td>
-        <td>
-          <div class="admin-actions">
-            <button class="admin-action-btn admin-action-btn--publish" data-publish-listing="${l.id}">
-              ${l.status === "published" ? "Gizlət" : "Dərc et"}
-            </button>
-            <button class="admin-action-btn" data-edit-listing="${l.id}">Redaktə</button>
-            <button class="admin-action-btn admin-action-btn--danger" data-delete-listing="${l.id}">Sil</button>
-          </div>
-        </td>
-      </tr>`).join("");
-
-    tbody.querySelectorAll("[data-edit-listing]").forEach((btn) => {
-      btn.addEventListener("click", () => openListingModal(Number(btn.dataset.editListing)));
-    });
-    tbody.querySelectorAll("[data-publish-listing]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        try {
-          await toggleListingPublish(btn.dataset.publishListing);
-          await refreshStore();
-          renderListings();
-          renderDashboard();
-        } catch (err) {
-          alert(err.message || "Xəta");
-        }
-      });
-    });
-    tbody.querySelectorAll("[data-delete-listing]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        if (!confirm("Bu obyekti silmək istədiyinizə əminsiniz?")) return;
-        try {
-          await deleteListing(btn.dataset.deleteListing);
-          await refreshStore();
-          renderListings();
-          renderDashboard();
-        } catch (err) {
-          alert(err.message || "Xəta");
-        }
-      });
-    });
+    const list = document.getElementById("listingsList");
+    const items = getFilteredListings();
+    list.innerHTML = items.length
+      ? items.map((l) => listingCard(l)).join("")
+      : '<p class="admin-empty">Nəticə tapılmadı</p>';
+    bindItemActions(list);
   }
 
   function renderComplexes() {
-    const tbody = document.getElementById("complexesTableBody");
-    tbody.innerHTML = storeCache.complexes.map((c) => `
-      <tr>
-        <td><img src="${c.image}" alt="" class="admin-table__img"></td>
-        <td><strong>${c.name}</strong></td>
-        <td>${c.priceFrom} ₼-dən</td>
-        <td>${c.location}</td>
-        <td>${c.deadline}</td>
-        <td>
-          <div class="admin-actions">
-            <button class="admin-action-btn" data-edit-complex="${c.id}">Redaktə</button>
-            <button class="admin-action-btn admin-action-btn--danger" data-delete-complex="${c.id}">Sil</button>
-          </div>
-        </td>
-      </tr>`).join("");
-
-    tbody.querySelectorAll("[data-edit-complex]").forEach((btn) => {
-      btn.addEventListener("click", () => openComplexModal(Number(btn.dataset.editComplex)));
-    });
-    tbody.querySelectorAll("[data-delete-complex]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        if (!confirm("Bu kompleksi silmək istədiyinizə əminsiniz?")) return;
-        try {
-          await deleteComplex(btn.dataset.deleteComplex);
-          await refreshStore();
-          renderComplexes();
-          renderDashboard();
-        } catch (err) {
-          alert(err.message || "Xəta");
-        }
-      });
-    });
+    const list = document.getElementById("complexesList");
+    list.innerHTML = storeCache.complexes.length
+      ? storeCache.complexes.map(complexCard).join("")
+      : '<p class="admin-empty">Kompleks yoxdur</p>';
+    bindItemActions(list);
   }
 
   function openModal(title) {
@@ -210,7 +261,7 @@
     currentModalType = "listing";
     editingId = id;
     const listing = id ? storeCache.listings.find((l) => l.id === id) : null;
-    openModal(id ? "Obyekti redaktə et" : "Yeni obyekt (qaralama)");
+    openModal(id ? "Obyekti redaktə et" : "Yeni obyekt");
 
     modalForm.innerHTML = `
       <div class="admin-field-row">
@@ -243,7 +294,7 @@
       <div class="admin-field-row">
         <label class="admin-field">
           <span>Otaq sayı</span>
-          <input type="number" name="rooms" min="0" value="${listing?.rooms ?? ""}">
+          <input type="number" name="rooms" min="0" inputmode="numeric" value="${listing?.rooms ?? ""}">
         </label>
         <label class="admin-field">
           <span>Sahə (m² və ya 8 sot)</span>
@@ -260,7 +311,7 @@
       </label>
       <label class="admin-field">
         <span>Təsvir</span>
-        <textarea name="description" rows="3" placeholder="Obyekt haqqında ətraflı məlumat...">${listing?.description || ""}</textarea>
+        <textarea name="description" rows="3" placeholder="Obyekt haqqında...">${listing?.description || ""}</textarea>
       </label>
       <div class="admin-checkboxes">
         <label class="admin-checkbox">
@@ -321,7 +372,7 @@
           ? storeCache.listings.find((l) => l.id === editingId)
           : null;
 
-        const listing = {
+        await upsertListing({
           id: editingId || undefined,
           price: fd.get("price").trim(),
           location: fd.get("location").trim(),
@@ -334,8 +385,7 @@
           description: fd.get("description")?.trim() || undefined,
           premium: fd.get("premium") === "on",
           date: existing?.date || (status === "published" ? formatDateNow() : undefined),
-        };
-        await upsertListing(listing);
+        });
         await refreshStore();
         renderListings();
       }
@@ -370,7 +420,7 @@
   document.getElementById("listingFilter").addEventListener("change", renderListings);
 
   document.getElementById("resetDataBtn").addEventListener("click", () => {
-    alert("Məlumatlar artıq MySQL-dədir. İlkin məlumatlar üçün database/schema.sql-i yenidən import edin.");
+    alert("Məlumatlar MySQL-dədir. İlkin data üçün Hostinger-də app restart edin (auto-migrate) və ya schema.sql import edin.");
   });
 
   showPanel();
