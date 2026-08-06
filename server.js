@@ -1,8 +1,28 @@
+const fs = require("fs");
 const path = require("path");
-require("dotenv").config({ path: path.join(__dirname, ".env") });
+
+function loadEnv() {
+  const candidates = [
+    path.join(__dirname, ".env"),
+    path.join(process.cwd(), ".env"),
+    path.join(__dirname, "..", ".env"),
+  ];
+  let loaded = 0;
+  for (const file of candidates) {
+    if (!fs.existsSync(file)) continue;
+    const result = require("dotenv").config({ path: file, quiet: true });
+    if (!result.error) {
+      loaded += Object.keys(result.parsed || {}).length;
+      if (Object.keys(result.parsed || {}).length > 0) break;
+    }
+  }
+  return loaded;
+}
+
+const envCount = loadEnv();
 
 const express = require("express");
-const { ping } = require("./lib/db");
+const { ping, getSafeDbInfo } = require("./lib/db");
 const authRoutes = require("./routes/auth");
 const listings = require("./routes/listings");
 const complexes = require("./routes/complexes");
@@ -16,20 +36,34 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/api/health", async (_req, res) => {
+  const dbInfo = getSafeDbInfo();
   try {
     const dbOk = await ping();
-    res.json({ ok: true, db: dbOk });
+    res.json({ ok: true, db: dbOk, envFromFile: envCount, ...dbInfo });
   } catch (err) {
-    res.status(503).json({ ok: false, db: false, error: err.message });
+    res.status(503).json({
+      ok: false,
+      db: false,
+      error: err.message,
+      envFromFile: envCount,
+      ...dbInfo,
+    });
   }
 });
 
 app.get("/health", async (_req, res) => {
+  const dbInfo = getSafeDbInfo();
   try {
     const dbOk = await ping();
-    res.json({ ok: true, db: dbOk });
+    res.json({ ok: true, db: dbOk, envFromFile: envCount, ...dbInfo });
   } catch (err) {
-    res.status(503).json({ ok: false, db: false, error: err.message });
+    res.status(503).json({
+      ok: false,
+      db: false,
+      error: err.message,
+      envFromFile: envCount,
+      ...dbInfo,
+    });
   }
 });
 
@@ -59,6 +93,9 @@ app.get(["/elan", "/elan.html"], (_req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
+  const info = getSafeDbInfo();
   console.log(`Listening on ${PORT}`);
-  console.log(`DB=${process.env.DB_HOST || "127.0.0.1"}/${process.env.DB_NAME || "elite_emlak"}`);
+  console.log(
+    `DB=${info.user}@${info.host}:${info.port}/${info.database} passwordSet=${info.passwordSet} envFromFile=${envCount}`
+  );
 });
