@@ -3,7 +3,6 @@
 
   const CATEGORY_ICONS = {
     "building-new": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="1"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/><line x1="9" y1="18" x2="15" y2="18"/></svg>',
-    "building-old": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-4h6v4"/></svg>',
     house: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
     office: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="1"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>',
     garage: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="8" width="20" height="14" rx="1"/><path d="M6 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/></svg>',
@@ -12,11 +11,87 @@
   };
 
   const FILTER_OPTIONS = {
-    type: ["Alış", "Kirayə", "Günlük"],
-    category: ["Mənzil", "Ev/Villa", "Ofis", "Qaraj", "Torpaq", "Obyekt"],
-    rooms: ["1 otaq", "2 otaq", "3 otaq", "4 otaq", "5+ otaq"],
-    price: ["50 000-ə qədər", "50 000 - 100 000", "100 000 - 200 000", "200 000 - 500 000", "500 000+"],
+    type: [
+      { label: "Alış", value: "sale" },
+      { label: "Kirayə", value: "rent" },
+      { label: "Günlük", value: "daily" },
+    ],
+    category: CATEGORIES.map((c) => ({ label: c.name, value: c.id })),
+    rooms: [
+      { label: "1 otaq", value: "1" },
+      { label: "2 otaq", value: "2" },
+      { label: "3 otaq", value: "3" },
+      { label: "4 otaq", value: "4" },
+      { label: "5+ otaq", value: "5+" },
+    ],
+    price: [
+      { label: "50 000-ə qədər", value: "0-50000" },
+      { label: "50 000 - 100 000", value: "50000-100000" },
+      { label: "100 000 - 200 000", value: "100000-200000" },
+      { label: "200 000 - 500 000", value: "200000-500000" },
+      { label: "500 000+", value: "500000-" },
+    ],
   };
+
+  const filters = {
+    listingType: null,
+    category: null,
+    rooms: null,
+    price: null,
+    q: "",
+  };
+
+  let allListings = [];
+
+  function listingPriceNum(listing) {
+    return Number(String(listing.price || "").split("/")[0].replace(/\s/g, "").replace(",", ".")) || 0;
+  }
+
+  function matchesPrice(listing, range) {
+    if (!range) return true;
+    const [minS, maxS] = String(range).split("-");
+    const min = minS === "" ? 0 : Number(minS);
+    const max = maxS === "" || maxS == null ? Infinity : Number(maxS);
+    const n = listingPriceNum(listing);
+    return n >= min && n <= max;
+  }
+
+  function matchesRooms(listing, rooms) {
+    if (!rooms) return true;
+    const r = Number(listing.rooms) || 0;
+    if (rooms === "5+") return r >= 5;
+    return r === Number(rooms);
+  }
+
+  function getFilteredListings(list = allListings) {
+    const q = (filters.q || "").trim().toLowerCase();
+    return list.filter((l) => {
+      if (filters.listingType && l.listingType !== filters.listingType) return false;
+      if (filters.category && l.category !== filters.category) return false;
+      if (!matchesRooms(l, filters.rooms)) return false;
+      if (!matchesPrice(l, filters.price)) return false;
+      if (q) {
+        const hay = `${l.location || ""} ${l.city || ""} ${l.title || ""} ${l.district || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function updateListingsTitle() {
+    const el = document.getElementById("listingsTitle");
+    if (!el) return;
+    const parts = [];
+    if (filters.listingType === "sale") parts.push("satış");
+    if (filters.listingType === "rent") parts.push("kirayə");
+    if (filters.listingType === "daily") parts.push("günlük");
+    if (filters.category && CATEGORY_LABELS[filters.category]) {
+      parts.push(CATEGORY_LABELS[filters.category].toLowerCase());
+    }
+    el.textContent = parts.length
+      ? `ELITE-EMLAK.AZ — ${parts.join(" · ")}`
+      : "ELITE-EMLAK.AZ — satış və kirayə obyektləri";
+  }
 
   function createBookmarkBtn(id) {
     const active = bookmarks.has(id);
@@ -33,6 +108,9 @@
       .map((t) => `<span class="card__tag">${t}</span>`)
       .join("");
     const typeLabels = { sale: "Satış", rent: "Kirayə", daily: "Günlük" };
+    const catLabel = CATEGORY_LABELS[listing.category]
+      ? `<span class="card__badge card__badge--cat">${CATEGORY_LABELS[listing.category]}</span>`
+      : "";
     const typeBadge = listing.listingType
       ? `<span class="card__badge card__badge--type">${typeLabels[listing.listingType] || ""}</span>`
       : "";
@@ -45,6 +123,7 @@
         <div class="card__image-wrap">
           <img src="${listing.image}" alt="" class="card__image" loading="lazy">
           ${typeBadge}
+          ${catLabel}
           ${createBookmarkBtn(listing.id)}
         </div>
         <div class="card__body">
@@ -82,10 +161,60 @@
       </a>`;
   }
 
+  function syncCategoryPills() {
+    document.querySelectorAll(".category-pill").forEach((btn) => {
+      btn.classList.toggle("category-pill--active", btn.dataset.category === filters.category);
+    });
+  }
+
+  function syncTypeNav() {
+    document.querySelectorAll("[data-filter-type]").forEach((a) => {
+      const v = a.dataset.filterType;
+      const active = v === "" ? !filters.listingType : filters.listingType === v;
+      a.classList.toggle("header__nav-link--active", active);
+    });
+  }
+
+  function syncSelectButtons() {
+    const typeBtn = document.querySelector('[data-select="type"]');
+    const catBtn = document.querySelector('[data-select="category"]');
+    const roomsBtn = document.querySelector('[data-select="rooms"]');
+    const priceBtn = document.querySelector('[data-select="price"]');
+    if (typeBtn) {
+      const opt = FILTER_OPTIONS.type.find((o) => o.value === filters.listingType);
+      typeBtn.textContent = opt?.label || "Növ";
+    }
+    if (catBtn) {
+      const opt = FILTER_OPTIONS.category.find((o) => o.value === filters.category);
+      catBtn.textContent = opt?.label || "Kateqoriya";
+    }
+    if (roomsBtn) {
+      const opt = FILTER_OPTIONS.rooms.find((o) => o.value === filters.rooms);
+      roomsBtn.textContent = opt?.label || "Otaq sayı";
+    }
+    if (priceBtn) {
+      const opt = FILTER_OPTIONS.price.find((o) => o.value === filters.price);
+      priceBtn.textContent = opt?.label || "Qiymət, ₼";
+    }
+  }
+
   async function renderCategories() {
     document.getElementById("categories").innerHTML = CATEGORIES.map(
-      (c) => `<a href="#" class="category-pill"><span class="category-pill__icon">${CATEGORY_ICONS[c.icon] || ""}</span>${c.name}</a>`
+      (c) =>
+        `<button type="button" class="category-pill" data-category="${c.id}"><span class="category-pill__icon">${CATEGORY_ICONS[c.icon] || ""}</span>${c.name}</button>`
     ).join("");
+
+    document.getElementById("categories").addEventListener("click", (e) => {
+      const btn = e.target.closest(".category-pill");
+      if (!btn) return;
+      const id = btn.dataset.category;
+      filters.category = filters.category === id ? null : id;
+      syncCategoryPills();
+      syncSelectButtons();
+      renderListings();
+      document.getElementById("listings")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
     const todayEl = document.getElementById("todayCount");
     if (todayEl) {
       try {
@@ -118,30 +247,64 @@
     }
   }
 
-  async function renderListings() {
+  function renderListings() {
+    const el = document.getElementById("listingsGrid");
+    if (!el) return;
+    updateListingsTitle();
+    syncCategoryPills();
+    syncTypeNav();
+    const items = getFilteredListings();
+    if (!items.length) {
+      el.innerHTML = `<p class="listings-empty">Bu filtrə uyğun elan tapılmadı. Başqa kateqoriya və ya növ seçin.</p>`;
+      return;
+    }
+    el.innerHTML = items.map((l) => createListingCard(l, "grid")).join("");
+  }
+
+  async function loadListings() {
     const el = document.getElementById("listingsGrid");
     try {
-      const items = await getAllListings();
-      el.innerHTML = items.map((l) => createListingCard(l, "grid")).join("");
+      allListings = await getAllListings();
+      renderListings();
     } catch (err) {
-      el.innerHTML = `<p class="detail-loading">Elanlar yüklənmədi. MySQL və API-ni yoxlayın.</p>`;
+      if (el) el.innerHTML = `<p class="detail-loading">Elanlar yüklənmədi. MySQL və API-ni yoxlayın.</p>`;
       console.error(err);
     }
   }
 
   function renderPopular() {
     document.getElementById("popularList").innerHTML = POPULAR_SEARCHES.map(
-      (s) => `<li><a href="#">${s}</a></li>`
+      (s) => `<li><a href="#" data-popular="${s}">${s}</a></li>`
     ).join("");
+    document.getElementById("popularList")?.addEventListener("click", (e) => {
+      const a = e.target.closest("[data-popular]");
+      if (!a) return;
+      e.preventDefault();
+      filters.q = a.dataset.popular;
+      const input = document.querySelector(".search-bar__input");
+      if (input) input.value = filters.q;
+      renderListings();
+      document.getElementById("listings")?.scrollIntoView({ behavior: "smooth" });
+    });
   }
 
   function renderFooterTags() {
     document.getElementById("bakuDistricts").innerHTML = BAKU_DISTRICTS.map(
-      (d) => `<a href="#" class="footer__tag">${d}</a>`
+      (d) => `<a href="#" class="footer__tag" data-place="${d}">${d}</a>`
     ).join("");
     document.getElementById("azerbaijanCities").innerHTML = AZERBAIJAN_CITIES.map(
-      (c) => `<a href="#" class="footer__tag">${c}</a>`
+      (c) => `<a href="#" class="footer__tag" data-place="${c}">${c}</a>`
     ).join("");
+    document.body.addEventListener("click", (e) => {
+      const a = e.target.closest(".footer__tag[data-place]");
+      if (!a) return;
+      e.preventDefault();
+      filters.q = a.dataset.place;
+      const input = document.querySelector(".search-bar__input");
+      if (input) input.value = filters.q;
+      renderListings();
+      document.getElementById("listings")?.scrollIntoView({ behavior: "smooth" });
+    });
   }
 
   function initSlider() {
@@ -223,12 +386,19 @@
     });
   }
 
+  function applySearchFromBar() {
+    const input = document.querySelector(".search-bar__input");
+    filters.q = input?.value.trim() || "";
+    renderListings();
+    document.getElementById("listings")?.scrollIntoView({ behavior: "smooth" });
+  }
+
   function initSearch() {
-    document.querySelector(".search-bar__submit")?.addEventListener("click", () => {
-      const input = document.querySelector(".search-bar__input");
-      const query = input?.value.trim();
-      if (query) {
-        document.querySelector(".page-title").scrollIntoView({ behavior: "smooth" });
+    document.querySelector(".search-bar__submit")?.addEventListener("click", applySearchFromBar);
+    document.querySelector(".search-bar__input")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        applySearchFromBar();
       }
     });
   }
@@ -243,7 +413,9 @@
       wrapper.classList.add("select-wrapper");
       wrapper.insertAdjacentHTML(
         "beforeend",
-        `<ul class="select-dropdown">${options.map((o) => `<li><button type="button">${o}</button></li>`).join("")}</ul>`
+        `<ul class="select-dropdown">${options
+          .map((o) => `<li><button type="button" data-value="${o.value}">${o.label}</button></li>`)
+          .join("")}</ul>`
       );
 
       btn.addEventListener("click", (e) => {
@@ -256,14 +428,40 @@
 
       wrapper.querySelectorAll(".select-dropdown button").forEach((opt) => {
         opt.addEventListener("click", () => {
+          const value = opt.dataset.value;
           btn.textContent = opt.textContent;
           wrapper.classList.remove("select-wrapper--open");
+          if (key === "type") filters.listingType = value;
+          if (key === "category") filters.category = value;
+          if (key === "rooms") filters.rooms = value;
+          if (key === "price") filters.price = value;
+          syncCategoryPills();
+          syncTypeNav();
         });
       });
     });
 
     document.addEventListener("click", () => {
       document.querySelectorAll(".select-wrapper--open").forEach((w) => w.classList.remove("select-wrapper--open"));
+    });
+  }
+
+  function initTypeNav() {
+    document.querySelectorAll("[data-filter-type]").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        const type = a.dataset.filterType;
+        if (a.getAttribute("href")?.startsWith("#") && type === undefined) return;
+        e.preventDefault();
+        filters.listingType = type === "" ? null : type;
+        syncSelectButtons();
+        syncTypeNav();
+        renderListings();
+        if (a.getAttribute("href") === "#complexes") {
+          document.getElementById("complexes")?.scrollIntoView({ behavior: "smooth" });
+        } else {
+          document.getElementById("listings")?.scrollIntoView({ behavior: "smooth" });
+        }
+      });
     });
   }
 
@@ -302,17 +500,28 @@
     });
   }
 
+  function readUrlFilters() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("category")) filters.category = params.get("category");
+    if (params.get("type")) filters.listingType = params.get("type");
+    if (params.get("q")) filters.q = params.get("q");
+  }
+
   async function init() {
+    readUrlFilters();
     renderPopular();
     renderFooterTags();
     initBookmarks();
     initSideMenu();
     initSearch();
     initDropdowns();
+    initTypeNav();
     initFloatingFilter();
     initLeadForm();
+    syncSelectButtons();
 
-    await Promise.all([renderCategories(), renderComplexes(), renderAgencies(), renderListings()]);
+    await Promise.all([renderCategories(), renderComplexes(), renderAgencies(), loadListings()]);
+    syncCategoryPills();
     initSlider();
   }
 

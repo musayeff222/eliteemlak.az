@@ -23,6 +23,15 @@ publicRouter.get("/", async (req, res) => {
       conditions.push("listing_type = ?");
       params.push(req.query.type);
     }
+    if (req.query.category) {
+      conditions.push("category = ?");
+      params.push(req.query.category);
+    }
+    if (req.query.q) {
+      conditions.push("(location LIKE ? OR city LIKE ? OR title LIKE ? OR district LIKE ?)");
+      const like = `%${String(req.query.q).trim()}%`;
+      params.push(like, like, like, like);
+    }
 
     const rows = await query(
       `SELECT * FROM listings

@@ -404,7 +404,8 @@
         String(l.price).includes(search) ||
         String(l.id).includes(search) ||
         (l.phone && l.phone.includes(search)) ||
-        (l.title && l.title.toLowerCase().includes(search));
+        (l.title && l.title.toLowerCase().includes(search)) ||
+        (l.category && (categoryLabels[l.category] || l.category).toLowerCase().includes(search));
       const matchFilter =
         filter === "all" ||
         (filter === "draft" && l.status === "draft") ||
@@ -412,7 +413,8 @@
         (filter === "sale" && l.listingType === "sale") ||
         (filter === "rent" && l.listingType === "rent") ||
         (filter === "daily" && l.listingType === "daily") ||
-        (filter === "premium" && l.premium);
+        (filter === "premium" && l.premium) ||
+        (filter.startsWith("cat-") && l.category === filter.slice(4));
       return matchSearch && matchFilter;
     });
   }
@@ -566,7 +568,7 @@
         </label>
         <label class="admin-field">
           <span>Kateqoriya</span>
-          <select name="category">
+          <select name="category" id="listingCategorySelect">
             ${Object.entries(categoryLabels).map(([k, v]) =>
               `<option value="${k}" ${listing?.category === k ? "selected" : ""}>${v}</option>`
             ).join("")}
@@ -587,19 +589,20 @@
         </label>
       </div>
       <div class="admin-field-row">
-        <label class="admin-field">
+        <label class="admin-field" id="listingRoomsField">
           <span>Otaq sayı</span>
           <input type="number" name="rooms" min="0" inputmode="numeric" value="${listing?.rooms ?? ""}">
         </label>
         <label class="admin-field">
-          <span>Sahə (m² və ya 8 sot)</span>
-          <input type="text" name="area" value="${listing?.area ?? ""}">
+          <span id="listingAreaLabel">Sahə (m² və ya sot)</span>
+          <input type="text" name="area" id="listingAreaInput" placeholder="məs: 120 və ya 8 sot" value="${listing?.area ?? ""}">
         </label>
       </div>
-      <label class="admin-field">
+      <label class="admin-field" id="listingFloorField">
         <span>Mərtəbə</span>
         <input type="text" name="floor" placeholder="5/8" value="${listing?.floor || ""}">
       </label>
+      <p class="admin-field-hint" id="listingCategoryHint">Kateqoriya: mənzil, ofis, qaraj, torpaq və s. seçin.</p>
       <label class="admin-field">
         <span>Şəkil (cihazdan seçin)</span>
         <input type="file" name="imageFile" id="listingImageFile" accept="image/*" capture="environment" ${listing?.image ? "" : "required"}>
@@ -620,6 +623,36 @@
     const fileInput = document.getElementById("listingImageFile");
     const imgInput = document.getElementById("listingImageInput");
     const imgPrev = document.getElementById("listingImagePreview");
+    const catSelect = document.getElementById("listingCategorySelect");
+
+    function syncCategoryFields() {
+      const cat = catSelect?.value || "apartment";
+      const roomsField = document.getElementById("listingRoomsField");
+      const floorField = document.getElementById("listingFloorField");
+      const areaLabel = document.getElementById("listingAreaLabel");
+      const hint = document.getElementById("listingCategoryHint");
+      const hideRooms = cat === "land" || cat === "garage";
+      if (roomsField) roomsField.hidden = hideRooms;
+      if (floorField) floorField.hidden = cat === "land";
+      if (areaLabel) {
+        areaLabel.textContent = cat === "land" ? "Sahə (sot və ya m²)" : "Sahə (m²)";
+      }
+      if (hint) {
+        const tips = {
+          apartment: "Mənzil: otaq, m² və mərtəbə doldurun.",
+          house: "Ev/Villa: otaq və sahə vacibdir.",
+          office: "Ofis: sahə və mərtəbə tövsiyə olunur.",
+          garage: "Qaraj: əsasən sahə kifayətdir.",
+          land: "Torpaq: sahəni sot ilə yazın (məs: 8 sot).",
+          commercial: "Obyekt: sahə və yer məlumatı vacibdir.",
+          other: "Digər: lazımi məlumatları doldurun.",
+        };
+        hint.textContent = tips[cat] || tips.other;
+      }
+    }
+    catSelect?.addEventListener("change", syncCategoryFields);
+    syncCategoryFields();
+
     fileInput?.addEventListener("change", () => {
       const file = fileInput.files?.[0];
       if (!file || !imgPrev) return;

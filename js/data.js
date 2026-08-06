@@ -8,7 +8,7 @@ const POPULAR_SEARCHES = [
   "Zabrat kirayə evlər",
   "Mehdiabad kirayə evlər",
   "Qara Qarayev kirayə",
-  "20-ci sahə kirayə evlər",
+  "20-ci sahə kirayə",
   "MIDA Yasamal kirayə",
   "Bağ evləri kirayə",
   "Daşınmaz emlak alqı-satqı",
@@ -31,12 +31,14 @@ const AZERBAIJAN_CITIES = [
   "Yevlax", "Zaqatala", "Zəngilan", "Zərdab",
 ];
 
+/** id = MySQL listings.category dəyəri */
 const CATEGORIES = [
-  { name: "Yeni tikili", icon: "building-new" },
-  { name: "Köhnə tikili", icon: "building-old" },
-  { name: "Həyət evi/Bağ evi", icon: "house" },
-  { name: "Ofis", icon: "office" },
-  { name: "Qaraj", icon: "garage" },
-  { name: "Torpaq", icon: "land" },
-  { name: "Obyekt", icon: "commercial" },
+  { id: "apartment", name: "Mənzil", icon: "building-new" },
+  { id: "house", name: "Həyət evi/Bağ evi", icon: "house" },
+  { id: "office", name: "Ofis", icon: "office" },
+  { id: "garage", name: "Qaraj", icon: "garage" },
+  { id: "land", name: "Torpaq", icon: "land" },
+  { id: "commercial", name: "Obyekt", icon: "commercial" },
 ];
+
+const CATEGORY_LABELS = Object.fromEntries(CATEGORIES.map((c) => [c.id, c.name]));

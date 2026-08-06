@@ -22,11 +22,11 @@
         </svg>
       </a>
       <nav class="header__nav">
-        <a href="#" class="header__nav-link header__nav-link--active">Alqı-satqı</a>
-        <a href="#" class="header__nav-link">Kirayə</a>
-        <a href="#" class="header__nav-link">Günlük</a>
-        <a href="#" class="header__nav-link">Obyektlər</a>
-        <a href="#" class="header__nav-link">Komplekslər</a>
+        <a href="#" class="header__nav-link header__nav-link--active" data-filter-type="sale">Alqı-satqı</a>
+        <a href="#" class="header__nav-link" data-filter-type="rent">Kirayə</a>
+        <a href="#" class="header__nav-link" data-filter-type="daily">Günlük</a>
+        <a href="#listings" class="header__nav-link" data-filter-type="">Obyektlər</a>
+        <a href="#complexes" class="header__nav-link">Komplekslər</a>
         <a href="#contact" class="header__nav-link header__nav-link--partner">
           <span class="partner-icon">★</span> Elite Emlak
         </a>
@@ -46,10 +46,10 @@
     <div class="search-bar">
       <div class="search-bar__filters">
         <div class="search-bar__select">
-          <button class="select-btn" data-select="type">Alış</button>
+          <button class="select-btn" data-select="type">Növ</button>
         </div>
         <div class="search-bar__select">
-          <button class="select-btn" data-select="category">Mənzil</button>
+          <button class="select-btn" data-select="category">Kateqoriya</button>
         </div>
         <div class="search-bar__select">
           <button class="select-btn" data-select="rooms">Otaq sayı</button>
@@ -76,7 +76,7 @@
   <!-- Main Content -->
   <main class="main-content">
     <!-- Residential Complexes -->
-    <section class="section">
+    <section class="section" id="complexes">
       <div class="section__header">
         <h4 class="section__title">Yaşayış kompleksləri</h4>
         <a href="#" class="section__more">Daha çox</a>
@@ -113,8 +113,8 @@
     </section>
 
     <!-- All Listings -->
-    <section class="section section--listings">
-      <h1 class="page-title">ELITE-EMLAK.AZ — satış və kirayə obyektləri</h1>
+    <section class="section section--listings" id="listings">
+      <h1 class="page-title" id="listingsTitle">ELITE-EMLAK.AZ — satış və kirayə obyektləri</h1>
       <div class="listings-grid" id="listingsGrid"></div>
     </section>
 
