@@ -576,10 +576,12 @@
         <input type="text" name="floor" placeholder="5/8" value="${listing?.floor || ""}">
       </label>
       <label class="admin-field">
-        <span>Şəkil URL</span>
-        <input type="url" name="image" id="listingImageInput" required value="${listing?.image || "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop"}">
+        <span>Şəkil (cihazdan seçin)</span>
+        <input type="file" name="imageFile" id="listingImageFile" accept="image/*" capture="environment" ${listing?.image ? "" : "required"}>
+        <input type="hidden" name="image" id="listingImageInput" value="${listing?.image || ""}">
       </label>
-      <div class="admin-img-preview"><img id="listingImagePreview" src="${listing?.image || "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop"}" alt=""></div>
+      <div class="admin-img-preview"><img id="listingImagePreview" src="${listing?.image || ""}" alt="" ${listing?.image ? "" : "hidden"}></div>
+      <p class="admin-field-hint" id="listingImageHint">${listing?.image ? "Mövcud şəkil saxlanılacaq. Yenisi seçsəniz əvəz olunacaq." : "JPG, PNG və ya WebP — max 8MB"}</p>
       <label class="admin-field">
         <span>Təsvir</span>
         <textarea name="description" rows="3" placeholder="Obyekt haqqında...">${listing?.description || ""}</textarea>
@@ -590,10 +592,16 @@
         </label>
       </div>`;
 
+    const fileInput = document.getElementById("listingImageFile");
     const imgInput = document.getElementById("listingImageInput");
     const imgPrev = document.getElementById("listingImagePreview");
-    imgInput?.addEventListener("input", () => {
-      if (imgPrev && imgInput.value) imgPrev.src = imgInput.value;
+    fileInput?.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      if (!file || !imgPrev) return;
+      const url = URL.createObjectURL(file);
+      imgPrev.src = url;
+      imgPrev.hidden = false;
+      if (imgInput) imgInput.value = "";
     });
   }
 
@@ -627,14 +635,28 @@
         <input type="text" name="developer" value="${complex?.developer || ""}">
       </label>
       <label class="admin-field">
-        <span>Şəkil URL</span>
-        <input type="url" name="image" required value="${complex?.image || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&h=400&fit=crop"}">
-      </label>`;
+        <span>Şəkil (cihazdan seçin)</span>
+        <input type="file" name="imageFile" id="complexImageFile" accept="image/*" capture="environment" ${complex?.image ? "" : "required"}>
+        <input type="hidden" name="image" id="complexImageInput" value="${complex?.image || ""}">
+      </label>
+      <div class="admin-img-preview"><img id="complexImagePreview" src="${complex?.image || ""}" alt="" ${complex?.image ? "" : "hidden"}></div>
+      <p class="admin-field-hint">${complex?.image ? "Mövcud şəkil saxlanılacaq. Yenisi seçsəniz əvəz olunacaq." : "JPG, PNG və ya WebP — max 8MB"}</p>`;
+
+    const fileInput = document.getElementById("complexImageFile");
+    const imgPrev = document.getElementById("complexImagePreview");
+    fileInput?.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      if (!file || !imgPrev) return;
+      imgPrev.src = URL.createObjectURL(file);
+      imgPrev.hidden = false;
+    });
   }
 
   modalForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(modalForm);
+    const saveBtn = document.getElementById("modalSave");
+    if (saveBtn) saveBtn.disabled = true;
 
     try {
       if (currentModalType === "listing") {
@@ -648,6 +670,18 @@
           ? storeCache.listings.find((l) => l.id === editingId)
           : null;
 
+        let imageUrl = String(fd.get("image") || "").trim();
+        const fileInput = document.getElementById("listingImageFile");
+        const file = fileInput?.files?.[0];
+        if (file) {
+          showToast("Şəkil yüklənir...");
+          imageUrl = await uploadImage(file);
+        }
+        if (!imageUrl) {
+          showToast("Şəkil seçin");
+          return;
+        }
+
         await upsertListing({
           id: editingId || undefined,
           title: fd.get("title")?.trim() || undefined,
@@ -660,7 +694,7 @@
           rooms: fd.get("rooms") ? Number(fd.get("rooms")) : undefined,
           area: area || undefined,
           floor: fd.get("floor")?.trim() || undefined,
-          image: fd.get("image").trim(),
+          image: imageUrl,
           description: fd.get("description")?.trim() || undefined,
           premium: fd.get("premium") === "on",
           date: existing?.date || (status === "published" ? formatDateNow() : undefined),
@@ -672,13 +706,25 @@
       }
 
       if (currentModalType === "complex") {
+        let imageUrl = String(fd.get("image") || "").trim();
+        const fileInput = document.getElementById("complexImageFile");
+        const file = fileInput?.files?.[0];
+        if (file) {
+          showToast("Şəkil yüklənir...");
+          imageUrl = await uploadImage(file);
+        }
+        if (!imageUrl) {
+          showToast("Şəkil seçin");
+          return;
+        }
+
         await upsertComplex({
           id: editingId || undefined,
           name: fd.get("name").trim(),
           priceFrom: fd.get("priceFrom").trim(),
           location: fd.get("location").trim(),
           deadline: fd.get("deadline").trim(),
-          image: fd.get("image").trim(),
+          image: imageUrl,
           developer: fd.get("developer")?.trim() || undefined,
         });
         await refreshStore();
@@ -690,6 +736,8 @@
       closeModal();
     } catch (err) {
       showToast(err.message || "Saxlama xətası");
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
     }
   });
 

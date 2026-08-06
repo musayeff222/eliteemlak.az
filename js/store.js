@@ -262,6 +262,22 @@ async function changeAdminPassword(currentPassword, newPassword) {
   });
 }
 
+async function uploadImage(file) {
+  const fd = new FormData();
+  fd.append("image", file);
+  const headers = {};
+  const token = getToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch("/api/admin/upload", {
+    method: "POST",
+    headers,
+    body: fd,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Yükləmə xətası (${res.status})`);
+  return data.url;
+}
+
 async function resetStore() {
   invalidateCache();
   return getStore();

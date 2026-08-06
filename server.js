@@ -24,19 +24,35 @@ const envCount = loadEnv();
 const express = require("express");
 const { ping, getSafeDbInfo } = require("./lib/db");
 const { migrate } = require("./lib/migrate");
+const { ensureUploadDir, resolveUploadDir, getUploadUrlPrefix } = require("./lib/uploads");
 const authRoutes = require("./routes/auth");
 const listings = require("./routes/listings");
 const complexes = require("./routes/complexes");
 const settingsRoutes = require("./routes/settings");
 const contacts = require("./routes/contacts");
 const statsRoutes = require("./routes/stats");
+const uploadRoutes = require("./routes/uploads");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const root = __dirname;
 
+let uploadDir;
+try {
+  uploadDir = ensureUploadDir();
+} catch (err) {
+  console.error("UPLOAD_DIR create failed:", err.message);
+  uploadDir = resolveUploadDir();
+}
+
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+const uploadPrefix = getUploadUrlPrefix();
+app.use(uploadPrefix, express.static(uploadDir, {
+  maxAge: "30d",
+  fallthrough: true,
+}));
 
 app.get("/api/health", async (_req, res) => {
   const dbInfo = getSafeDbInfo();
@@ -98,6 +114,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/contacts", contacts.publicRouter);
 app.use("/api/admin/contacts", contacts.adminRouter);
 app.use("/api/admin/stats", statsRoutes);
+app.use("/api/admin/upload", uploadRoutes);
 
 app.use(express.static(root, { index: false }));
 
@@ -131,6 +148,7 @@ async function start() {
     console.log(
       `DB=${info.user}@${info.host}:${info.port}/${info.database} passwordSet=${info.passwordSet} envFromFile=${envCount}`
     );
+    console.log(`UPLOAD_DIR=${uploadDir} url=${uploadPrefix}`);
   });
 }
 
