@@ -17,8 +17,13 @@
 
     <aside class="admin-sidebar" id="adminSidebar">
       <div class="admin-sidebar__brand">
-        <span class="admin-sidebar__name">ELITE-EMLAK</span>
-        <span class="admin-sidebar__tag">Super Admin</span>
+        <div>
+          <span class="admin-sidebar__name">ELITE-EMLAK</span>
+          <span class="admin-sidebar__tag">Super Admin</span>
+        </div>
+        <button type="button" class="admin-sidebar__close" id="sidebarCloseBtn" aria-label="Menyunu bağla">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
       <nav class="admin-nav">
         <button type="button" class="admin-nav__item admin-nav__item--active" data-view="dashboard">
@@ -50,8 +55,9 @@
 
     <div class="admin-shell">
       <header class="admin-topbar">
-        <button type="button" class="admin-topbar__menu" id="menuBtn" aria-label="Menyu">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <button type="button" class="admin-topbar__menu" id="menuBtn" aria-label="Menyu" aria-expanded="false">
+          <svg class="admin-topbar__icon-open" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <svg class="admin-topbar__icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" hidden><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
         <h1 class="admin-topbar__title" id="pageTitle">İcmal</h1>
         <a href="/" class="admin-topbar__site" target="_blank" rel="noopener" aria-label="Sayt">
@@ -61,14 +67,32 @@
 
       <main class="admin-main">
         <section class="admin-view" id="view-dashboard">
-          <p class="admin-hint">Super Admin: obyektlər, komplekslər, müraciətlər və sayt ayarları bir yerdə.</p>
+          <p class="admin-hint">Kartlara toxunun — uyğun səhifə açılsın. Menyu düyməsi ilə sol paneli açın/bağlayın.</p>
           <div class="admin-stats" id="dashStats">
-            <div class="admin-stat admin-stat--green"><span class="admin-stat__value" id="statPublished">0</span><span class="admin-stat__label">Dərc</span></div>
-            <div class="admin-stat"><span class="admin-stat__value" id="statDraft">0</span><span class="admin-stat__label">Qaralama</span></div>
-            <div class="admin-stat admin-stat--blue"><span class="admin-stat__value" id="statRent">0</span><span class="admin-stat__label">Kirayə</span></div>
-            <div class="admin-stat admin-stat--gold"><span class="admin-stat__value" id="statSale">0</span><span class="admin-stat__label">Satış</span></div>
-            <div class="admin-stat"><span class="admin-stat__value" id="statPremium">0</span><span class="admin-stat__label">Premium</span></div>
-            <div class="admin-stat admin-stat--alert"><span class="admin-stat__value" id="statUnread">0</span><span class="admin-stat__label">Yeni müraciət</span></div>
+            <button type="button" class="admin-stat admin-stat--green admin-stat--click" data-goto="listings" data-filter="published">
+              <span class="admin-stat__value" id="statPublished">0</span>
+              <span class="admin-stat__label">Dərc</span>
+            </button>
+            <button type="button" class="admin-stat admin-stat--click" data-goto="listings" data-filter="draft">
+              <span class="admin-stat__value" id="statDraft">0</span>
+              <span class="admin-stat__label">Qaralama</span>
+            </button>
+            <button type="button" class="admin-stat admin-stat--blue admin-stat--click" data-goto="listings" data-filter="rent">
+              <span class="admin-stat__value" id="statRent">0</span>
+              <span class="admin-stat__label">Kirayə</span>
+            </button>
+            <button type="button" class="admin-stat admin-stat--gold admin-stat--click" data-goto="listings" data-filter="sale">
+              <span class="admin-stat__value" id="statSale">0</span>
+              <span class="admin-stat__label">Satış</span>
+            </button>
+            <button type="button" class="admin-stat admin-stat--click" data-goto="listings" data-filter="premium">
+              <span class="admin-stat__value" id="statPremium">0</span>
+              <span class="admin-stat__label">Premium</span>
+            </button>
+            <button type="button" class="admin-stat admin-stat--alert admin-stat--click" data-goto="messages">
+              <span class="admin-stat__value" id="statUnread">0</span>
+              <span class="admin-stat__label">Yeni müraciət</span>
+            </button>
           </div>
           <div class="admin-quick">
             <button type="button" class="admin-btn admin-btn--primary" data-goto="listings" id="quickAddListing">+ Yeni obyekt</button>

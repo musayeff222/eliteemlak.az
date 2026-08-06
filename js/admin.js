@@ -47,21 +47,40 @@
     showToast._t = setTimeout(() => { toast.hidden = true; }, 2600);
   }
 
+  function syncMenuUi() {
+    const open = panel.classList.contains("admin-panel--menu-open");
+    const menuBtn = document.getElementById("menuBtn");
+    if (menuBtn) menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    const iconOpen = menuBtn?.querySelector(".admin-topbar__icon-open");
+    const iconClose = menuBtn?.querySelector(".admin-topbar__icon-close");
+    if (iconOpen) iconOpen.hidden = open;
+    if (iconClose) iconClose.hidden = !open;
+  }
+
   function closeMenu() {
     panel.classList.remove("admin-panel--menu-open");
     backdrop.hidden = true;
+    syncMenuUi();
   }
 
   function openMenu() {
     panel.classList.add("admin-panel--menu-open");
     backdrop.hidden = false;
+    syncMenuUi();
   }
 
-  document.getElementById("menuBtn")?.addEventListener("click", () => {
+  function toggleMenu() {
     if (panel.classList.contains("admin-panel--menu-open")) closeMenu();
     else openMenu();
-  });
+  }
+
+  document.getElementById("menuBtn")?.addEventListener("click", toggleMenu);
+  document.getElementById("sidebarCloseBtn")?.addEventListener("click", closeMenu);
   backdrop?.addEventListener("click", closeMenu);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
 
   async function refreshStore() {
     storeCache = await getStore();
@@ -96,7 +115,7 @@
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
   document.getElementById("logoutBtnMobile")?.addEventListener("click", logout);
 
-  async function switchView(view) {
+  async function switchView(view, options = {}) {
     document.querySelectorAll(".admin-nav__item").forEach((b) => {
       b.classList.toggle("admin-nav__item--active", b.dataset.view === view);
     });
@@ -107,6 +126,11 @@
     document.querySelectorAll(".admin-view").forEach((v) => (v.hidden = true));
     document.getElementById(`view-${view}`).hidden = false;
     closeMenu();
+
+    if (view === "listings" && options.filter) {
+      const filterEl = document.getElementById("listingFilter");
+      if (filterEl) filterEl.value = options.filter;
+    }
 
     try {
       await refreshStore();
@@ -133,10 +157,11 @@
   document.querySelectorAll("[data-goto]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const v = btn.dataset.goto;
+      const filter = btn.dataset.filter || null;
       if (v === "listings" && btn.id === "quickAddListing") {
         switchView("listings").then(() => openListingModal());
       } else {
-        switchView(v);
+        switchView(v, filter ? { filter } : {});
       }
     });
   });

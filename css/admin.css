@@ -119,6 +119,14 @@ button { -webkit-tap-highlight-color: transparent; }
   z-index: 140;
 }
 
+.admin-drawer-backdrop[hidden] {
+  display: none !important;
+}
+
+.admin-panel--menu-open .admin-drawer-backdrop:not([hidden]) {
+  display: block;
+}
+
 .admin-sidebar {
   width: var(--admin-sidebar-w);
   background: #1a1614;
@@ -130,11 +138,37 @@ button { -webkit-tap-highlight-color: transparent; }
   z-index: 150;
   padding-top: var(--safe-top);
   padding-bottom: var(--safe-bottom);
+  transform: translateX(-105%);
+  transition: transform 0.28s ease;
+  box-shadow: none;
+}
+
+.admin-panel--menu-open .admin-sidebar {
+  transform: translateX(0);
+  box-shadow: 12px 0 40px rgba(0, 0, 0, 0.28);
 }
 
 .admin-sidebar__brand {
-  padding: 20px 20px 16px;
+  padding: 16px 14px 16px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-sidebar__close {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .admin-sidebar__name {
@@ -211,7 +245,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .admin-shell {
   flex: 1;
-  margin-left: var(--admin-sidebar-w);
+  margin-left: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -219,7 +253,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 .admin-topbar {
-  display: none;
+  display: flex;
   position: sticky;
   top: 0;
   z-index: 120;
@@ -292,6 +326,25 @@ button { -webkit-tap-highlight-color: transparent; }
   border: 1px solid var(--admin-line);
   border-radius: var(--admin-radius);
   padding: 16px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+}
+
+.admin-stat--click {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.admin-stat--click:hover {
+  border-color: rgba(31, 107, 79, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.admin-stat--click:active {
+  transform: scale(0.98);
 }
 
 .admin-stat__value {
@@ -636,26 +689,8 @@ button { -webkit-tap-highlight-color: transparent; }
 /* —— Mobile / iPhone —— */
 @media (max-width: 900px) {
   .admin-sidebar {
-    transform: translateX(-105%);
-    transition: transform 0.25s ease;
     width: min(82vw, 300px);
   }
-
-  .admin-panel--menu-open .admin-sidebar {
-    transform: translateX(0);
-  }
-
-  .admin-drawer-backdrop {
-    display: block;
-  }
-
-  .admin-drawer-backdrop[hidden] {
-    display: none;
-  }
-
-  .admin-shell { margin-left: 0; }
-
-  .admin-topbar { display: flex; }
 
   .admin-main {
     padding: 14px 14px calc(var(--admin-tabbar-h) + var(--safe-bottom) + 18px);
