@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>Admin — ELITE-EMLAK.AZ</title>
+  <title>Super Admin — ELITE-EMLAK.AZ</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
@@ -18,7 +18,7 @@
     <aside class="admin-sidebar" id="adminSidebar">
       <div class="admin-sidebar__brand">
         <span class="admin-sidebar__name">ELITE-EMLAK</span>
-        <span class="admin-sidebar__tag">Admin</span>
+        <span class="admin-sidebar__tag">Super Admin</span>
       </div>
       <nav class="admin-nav">
         <button type="button" class="admin-nav__item admin-nav__item--active" data-view="dashboard">
@@ -33,8 +33,12 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2" width="16" height="20" rx="2"/></svg>
           <span>Komplekslər</span>
         </button>
+        <button type="button" class="admin-nav__item" data-view="messages">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Müraciətlər <em class="admin-nav__badge" id="navUnreadBadge" hidden>0</em></span>
+        </button>
         <button type="button" class="admin-nav__item" data-view="settings">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
           <span>Ayarlar</span>
         </button>
       </nav>
@@ -57,24 +61,19 @@
 
       <main class="admin-main">
         <section class="admin-view" id="view-dashboard">
-          <p class="admin-hint">Obyektləri redaktə edin, sonra <strong>Dərc et</strong> ilə saytda paylaşın.</p>
-          <div class="admin-stats">
-            <div class="admin-stat admin-stat--green">
-              <span class="admin-stat__value" id="statPublished">0</span>
-              <span class="admin-stat__label">Dərc</span>
-            </div>
-            <div class="admin-stat">
-              <span class="admin-stat__value" id="statDraft">0</span>
-              <span class="admin-stat__label">Qaralama</span>
-            </div>
-            <div class="admin-stat admin-stat--blue">
-              <span class="admin-stat__value" id="statRent">0</span>
-              <span class="admin-stat__label">Kirayə</span>
-            </div>
-            <div class="admin-stat admin-stat--gold">
-              <span class="admin-stat__value" id="statSale">0</span>
-              <span class="admin-stat__label">Satış</span>
-            </div>
+          <p class="admin-hint">Super Admin: obyektlər, komplekslər, müraciətlər və sayt ayarları bir yerdə.</p>
+          <div class="admin-stats" id="dashStats">
+            <div class="admin-stat admin-stat--green"><span class="admin-stat__value" id="statPublished">0</span><span class="admin-stat__label">Dərc</span></div>
+            <div class="admin-stat"><span class="admin-stat__value" id="statDraft">0</span><span class="admin-stat__label">Qaralama</span></div>
+            <div class="admin-stat admin-stat--blue"><span class="admin-stat__value" id="statRent">0</span><span class="admin-stat__label">Kirayə</span></div>
+            <div class="admin-stat admin-stat--gold"><span class="admin-stat__value" id="statSale">0</span><span class="admin-stat__label">Satış</span></div>
+            <div class="admin-stat"><span class="admin-stat__value" id="statPremium">0</span><span class="admin-stat__label">Premium</span></div>
+            <div class="admin-stat admin-stat--alert"><span class="admin-stat__value" id="statUnread">0</span><span class="admin-stat__label">Yeni müraciət</span></div>
+          </div>
+          <div class="admin-quick">
+            <button type="button" class="admin-btn admin-btn--primary" data-goto="listings" id="quickAddListing">+ Yeni obyekt</button>
+            <button type="button" class="admin-btn" data-goto="messages">Müraciətlər</button>
+            <button type="button" class="admin-btn" data-goto="settings">Ayarlar</button>
           </div>
           <h2 class="admin-section-title">Son obyektlər</h2>
           <div class="admin-item-list" id="recentList"></div>
@@ -94,6 +93,13 @@
             </select>
             <button type="button" class="admin-btn admin-btn--primary" id="addListingBtn">+ Yeni</button>
           </div>
+          <div class="admin-bulk" id="bulkBar" hidden>
+            <span id="bulkCount">0 seçildi</span>
+            <button type="button" class="admin-action-btn admin-action-btn--publish" data-bulk="publish">Dərc et</button>
+            <button type="button" class="admin-action-btn" data-bulk="draft">Qaralama</button>
+            <button type="button" class="admin-action-btn" data-bulk="premium">Premium</button>
+            <button type="button" class="admin-action-btn admin-action-btn--danger" data-bulk="delete">Sil</button>
+          </div>
           <div class="admin-item-list" id="listingsList"></div>
         </section>
 
@@ -104,20 +110,49 @@
           <div class="admin-item-list" id="complexesList"></div>
         </section>
 
+        <section class="admin-view" id="view-messages" hidden>
+          <div class="admin-toolbar">
+            <button type="button" class="admin-btn" id="markAllReadBtn">Hamısını oxu</button>
+            <button type="button" class="admin-btn" id="refreshMessagesBtn">Yenilə</button>
+          </div>
+          <div class="admin-item-list" id="messagesList"></div>
+        </section>
+
         <section class="admin-view" id="view-settings" hidden>
+          <div class="admin-block">
+            <h2 class="admin-block__title">Sayt ayarları</h2>
+            <form id="settingsForm">
+              <label class="admin-field"><span>Sayt adı</span><input name="site_name" id="set_site_name"></label>
+              <label class="admin-field"><span>Telefon</span><input name="contact_phone" id="set_contact_phone" inputmode="tel"></label>
+              <label class="admin-field"><span>Email</span><input name="contact_email" id="set_contact_email" type="email"></label>
+              <label class="admin-field"><span>Şəhər (default)</span><input name="default_city" id="set_default_city"></label>
+              <button type="submit" class="admin-btn admin-btn--primary">Ayarları saxla</button>
+            </form>
+          </div>
+          <div class="admin-block">
+            <h2 class="admin-block__title">Profil</h2>
+            <form id="profileForm">
+              <label class="admin-field"><span>Ad</span><input name="fullName" id="prof_fullName"></label>
+              <label class="admin-field"><span>Email</span><input name="email" id="prof_email" type="email"></label>
+              <button type="submit" class="admin-btn admin-btn--primary">Profili saxla</button>
+            </form>
+          </div>
+          <div class="admin-block">
+            <h2 class="admin-block__title">Şifrə dəyiş</h2>
+            <form id="passwordForm">
+              <label class="admin-field"><span>Cari şifrə</span><input type="password" name="currentPassword" required autocomplete="current-password"></label>
+              <label class="admin-field"><span>Yeni şifrə</span><input type="password" name="newPassword" required minlength="6" autocomplete="new-password"></label>
+              <button type="submit" class="admin-btn admin-btn--primary">Şifrəni yenilə</button>
+            </form>
+          </div>
           <div class="admin-block">
             <h2 class="admin-block__title">İş axını</h2>
             <ol class="admin-workflow">
-              <li>Müştəridən məlumat alın</li>
-              <li><strong>+ Yeni</strong> ilə qaralama yaradın</li>
-              <li>Redaktə edin</li>
-              <li><strong>Dərc et</strong> ilə paylaşın</li>
+              <li>Saytdan / telefonla müraciət alın</li>
+              <li>Obyekt yaradın (qaralama)</li>
+              <li>Yoxlayıb <strong>Dərc et</strong></li>
+              <li>Premium elanları seçilmişlərdə göstərin</li>
             </ol>
-          </div>
-          <div class="admin-block admin-block--danger">
-            <h2 class="admin-block__title">Data</h2>
-            <p class="admin-block__text">İlkin məlumatlar üçün MySQL-də schema yenidən import edin.</p>
-            <button type="button" class="admin-btn admin-btn--danger" id="resetDataBtn">Məlumat haqqında</button>
           </div>
           <button type="button" class="admin-btn admin-btn--ghost admin-btn--full" id="logoutBtnMobile">Çıxış</button>
         </section>
@@ -133,12 +168,12 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
         <span>Obyekt</span>
       </button>
-      <button type="button" class="admin-tabbar__item" data-view="complexes">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2" width="16" height="20" rx="2"/></svg>
-        <span>Kompleks</span>
+      <button type="button" class="admin-tabbar__item" data-view="messages">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Mesaj</span>
       </button>
       <button type="button" class="admin-tabbar__item" data-view="settings">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg>
         <span>Ayar</span>
       </button>
     </nav>
@@ -159,6 +194,8 @@
       </div>
     </div>
   </div>
+
+  <div class="admin-toast" id="toast" hidden></div>
 
   <script src="/js/data.js"></script>
   <script src="/js/store.js"></script>

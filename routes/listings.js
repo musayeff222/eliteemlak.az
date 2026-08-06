@@ -192,6 +192,89 @@ adminRouter.patch("/:id/publish", async (req, res) => {
   }
 });
 
+adminRouter.post("/bulk", async (req, res) => {
+  try {
+    const { ids, action } = req.body || {};
+    if (!Array.isArray(ids) || !ids.length) {
+      return res.status(400).json({ error: "ID siyahısı lazımdır" });
+    }
+    const cleanIds = ids.map(Number).filter((n) => n > 0);
+    if (!cleanIds.length) return res.status(400).json({ error: "Keçərli ID yoxdur" });
+    const placeholders = cleanIds.map(() => "?").join(",");
+
+    if (action === "publish") {
+      await query(
+        `UPDATE listings SET status = 'published', published_at = COALESCE(published_at, NOW()) WHERE id IN (${placeholders})`,
+        cleanIds
+      );
+    } else if (action === "draft") {
+      await query(
+        `UPDATE listings SET status = 'draft' WHERE id IN (${placeholders})`,
+        cleanIds
+      );
+    } else if (action === "delete") {
+      await query(`DELETE FROM listings WHERE id IN (${placeholders})`, cleanIds);
+    } else if (action === "premium") {
+      await query(
+        `UPDATE listings SET is_premium = 1 WHERE id IN (${placeholders})`,
+        cleanIds
+      );
+    } else if (action === "unpremium") {
+      await query(
+        `UPDATE listings SET is_premium = 0 WHERE id IN (${placeholders})`,
+        cleanIds
+      );
+    } else {
+      return res.status(400).json({ error: "Naməlum əməliyyat" });
+    }
+    res.json({ ok: true, count: cleanIds.length });
+  } catch (err) {
+    console.error("bulk listings:", err);
+    res.status(500).json({ error: "Server xətası", detail: err.message });
+  }
+});
+
+adminRouter.post("/:id/duplicate", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const existing = await fetchListingById(id);
+    if (!existing) return res.status(404).json({ error: "Obyekt tapılmadı" });
+
+    const result = await query(
+      `INSERT INTO listings (
+        title, price, price_period, listing_type, status, is_premium,
+        category, location, city, district, rooms, area, area_unit,
+        floor, image_url, description, phone, tags, published_at, created_by
+      ) VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)`,
+      [
+        existing.title,
+        existing.price,
+        existing.price_period,
+        existing.listing_type,
+        existing.is_premium,
+        existing.category,
+        existing.location,
+        existing.city,
+        existing.district,
+        existing.rooms,
+        existing.area,
+        existing.area_unit,
+        existing.floor,
+        existing.image_url,
+        existing.description,
+        existing.phone,
+        typeof existing.tags === "string" ? existing.tags : JSON.stringify(existing.tags || []),
+        req.admin.sub,
+      ]
+    );
+    const row = await fetchListingById(result.insertId);
+    res.status(201).json(listingFromRow(row));
+  } catch (err) {
+    console.error("duplicate listing:", err);
+    res.status(500).json({ error: "Server xətası", detail: err.message });
+  }
+});
+
 adminRouter.delete("/:id", async (req, res) => {
   try {
     const id = Number(req.params.id);

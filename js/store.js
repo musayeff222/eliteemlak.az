@@ -195,6 +195,73 @@ async function persistSettings(settings) {
   return result;
 }
 
+async function loadSettings() {
+  _cache.settings = await api("/api/settings");
+  return _cache.settings;
+}
+
+async function getAdminStats() {
+  return api("/api/admin/stats");
+}
+
+async function getContacts() {
+  return api("/api/admin/contacts");
+}
+
+async function markContactRead(id) {
+  return api(`/api/admin/contacts/${id}/read`, { method: "PATCH" });
+}
+
+async function markAllContactsRead() {
+  return api("/api/admin/contacts/read-all", { method: "PATCH" });
+}
+
+async function deleteContact(id) {
+  return api(`/api/admin/contacts/${id}`, { method: "DELETE" });
+}
+
+async function submitContact(payload) {
+  return api("/api/contacts", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+async function bulkListings(ids, action) {
+  const result = await api("/api/admin/listings/bulk", {
+    method: "POST",
+    body: JSON.stringify({ ids, action }),
+  });
+  invalidateCache();
+  return result;
+}
+
+async function duplicateListing(id) {
+  const result = await api(`/api/admin/listings/${id}/duplicate`, {
+    method: "POST",
+  });
+  invalidateCache();
+  return result;
+}
+
+async function getAdminProfile() {
+  return api("/api/auth/me");
+}
+
+async function updateAdminProfile(payload) {
+  return api("/api/auth/profile", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+async function changeAdminPassword(currentPassword, newPassword) {
+  return api("/api/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
 async function resetStore() {
   invalidateCache();
   return getStore();

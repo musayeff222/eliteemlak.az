@@ -28,6 +28,8 @@ const authRoutes = require("./routes/auth");
 const listings = require("./routes/listings");
 const complexes = require("./routes/complexes");
 const settingsRoutes = require("./routes/settings");
+const contacts = require("./routes/contacts");
+const statsRoutes = require("./routes/stats");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -93,6 +95,9 @@ app.use("/api/admin/listings", listings.adminRouter);
 app.use("/api/complexes", complexes.publicRouter);
 app.use("/api/admin/complexes", complexes.adminRouter);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/contacts", contacts.publicRouter);
+app.use("/api/admin/contacts", contacts.adminRouter);
+app.use("/api/admin/stats", statsRoutes);
 
 app.use(express.static(root, { index: false }));
 

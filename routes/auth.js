@@ -1,5 +1,11 @@
 const express = require("express");
-const { login, authMiddleware, findAdminByUsername } = require("../lib/auth");
+const {
+  login,
+  authMiddleware,
+  findAdminByUsername,
+  changePassword,
+  updateProfile,
+} = require("../lib/auth");
 
 const router = express.Router();
 
@@ -34,6 +40,34 @@ router.get("/me", authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.error("me error:", err);
+    res.status(500).json({ error: "Server xətası" });
+  }
+});
+
+router.put("/profile", authMiddleware, async (req, res) => {
+  try {
+    const { fullName, email } = req.body || {};
+    const admin = await updateProfile(req.admin.sub, { fullName, email });
+    res.json({
+      id: admin.id,
+      username: admin.username,
+      fullName: admin.full_name,
+      email: admin.email,
+    });
+  } catch (err) {
+    console.error("profile error:", err);
+    res.status(500).json({ error: "Server xətası" });
+  }
+});
+
+router.post("/change-password", authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+    const result = await changePassword(req.admin.sub, currentPassword, newPassword);
+    if (!result.ok) return res.status(400).json({ error: result.error });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("change-password error:", err);
     res.status(500).json({ error: "Server xətası" });
   }
 });

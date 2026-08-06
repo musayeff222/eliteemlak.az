@@ -275,6 +275,33 @@
     });
   }
 
+  function initLeadForm() {
+    const form = document.getElementById("leadForm");
+    const status = document.getElementById("leadStatus");
+    if (!form) return;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      try {
+        await submitContact({
+          fullName: fd.get("fullName")?.trim() || undefined,
+          phone: fd.get("phone")?.trim(),
+          message: fd.get("message")?.trim() || undefined,
+        });
+        form.reset();
+        if (status) {
+          status.hidden = false;
+          status.textContent = "Müraciətiniz qəbul olundu. Tezliklə əlaqə saxlayacağıq.";
+        }
+      } catch (err) {
+        if (status) {
+          status.hidden = false;
+          status.textContent = err.message || "Göndərmə alınmadı";
+        }
+      }
+    });
+  }
+
   async function init() {
     renderPopular();
     renderFooterTags();
@@ -283,6 +310,7 @@
     initSearch();
     initDropdowns();
     initFloatingFilter();
+    initLeadForm();
 
     await Promise.all([renderCategories(), renderComplexes(), renderAgencies(), renderListings()]);
     initSlider();

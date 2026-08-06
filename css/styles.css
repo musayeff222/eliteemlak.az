@@ -705,6 +705,45 @@ ul { list-style: none; }
   color: var(--color-primary);
 }
 
+.footer__lead-form {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer__lead-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.footer__lead-form input,
+.footer__lead-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+
+.footer__lead-btn {
+  min-height: 44px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.footer__lead-status {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
 .footer__app {
   display: flex;
   align-items: center;
